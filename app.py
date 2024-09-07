@@ -7,6 +7,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import plotly.colors as pc
 import colorsys
+import os
+import xml.etree.ElementTree as ET
 
 # Sample data
 np.random.seed(42)  # For reproducibility
@@ -117,12 +119,139 @@ app.layout = html.Div(
         ),
 
         html.Button('Update Plot', id='update-button', n_clicks=0),
+        
 
+        
+        html.Br(),  # Add a break here
+        html.Br(),  # Add a break here
+        html.Label('Load Saved Settings:', id='load-settings-label'),
+        html.Br(),  # Add a break here
+        dcc.Dropdown(
+            id='load-settings-dropdown',
+            options=[],
+            value=None
+        ),
+        html.Button('Load Settings', id='load-settings-button', n_clicks=0),
+        html.Button('Update Settings', id='update-settings-button', n_clicks=0),
+        html.Br(),  # Add a break here
+        html.Br(),  # Add a break here
+        html.Label('Enter description to a new save file:', id='description-label'),
+        html.Br(),  # Add a break here
+        dcc.Input(id='description-input', type='text', value='', placeholder='Enter description'),
+        html.Button('Save Settings', id='save-settings-button', n_clicks=0),
         dcc.Graph(
             id='example-graph'
         )
     ]
 )
+
+# Function to save settings to an XML file
+def save_settings(filename, settings):
+    root = ET.Element("settings")
+    for key, value in settings.items():
+        child = ET.SubElement(root, key)
+        child.text = str(value)
+    tree = ET.ElementTree(root)
+    tree.write(filename)
+
+# Function to load settings from an XML file
+def load_settings(filename):
+    tree = ET.parse(filename)
+    root = tree.getroot()
+    settings = {child.tag: child.text for child in root}
+    return settings
+
+# Function to get list of saved settings files
+def get_saved_settings_files():
+    if not os.path.exists('./saved_setups'):
+        os.makedirs('./saved_setups')
+    return [{'label': f, 'value': f} for f in os.listdir('./saved_setups') if f.endswith('.xml')]
+
+# Update the saved settings dropdown options
+@app.callback(
+    Output('load-settings-dropdown', 'options'),
+    [Input('save-settings-button', 'n_clicks')]
+)
+def update_saved_settings_dropdown(n_clicks):
+    return get_saved_settings_files()
+
+# Load settings and apply to controls
+@app.callback(
+    [Output('xaxis-column', 'value'),
+     Output('yaxis-columns', 'value'),
+     Output('secondary-yaxis-columns', 'value'),
+     Output('color-column', 'value'),
+     Output('color-base', 'value'),
+     Output('chart-type', 'value')],
+    [Input('load-settings-button', 'n_clicks')],
+    [State('load-settings-dropdown', 'value')]
+)
+def load_settings_to_controls(n_clicks, filename):
+    if filename is None:
+        return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update)
+    try:
+        settings = load_settings(f'./saved_setups/{filename}')
+        return (settings['xaxis_column'],
+                settings['yaxis_columns'].split(',') if settings['yaxis_columns'] else [],
+                settings['secondary_yaxis_columns'].split(',') if settings['secondary_yaxis_columns'] else [],
+                settings['color_column'],
+                settings['color_base'],
+                settings['chart_type'])
+    except Exception as e:
+        print(f"Error loading settings: {e}")
+        return (dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update)
+
+# Save settings when button is clicked
+@app.callback(
+    Output('save-settings-button', 'n_clicks'),
+    [Input('save-settings-button', 'n_clicks')],
+    [State('xaxis-column', 'value'),
+     State('yaxis-columns', 'value'),
+     State('secondary-yaxis-columns', 'value'),
+     State('color-column', 'value'),
+     State('color-base', 'value'),
+     State('chart-type', 'value'),
+     State('description-input', 'value')]
+)
+def save_current_settings(n_clicks, xaxis_column, yaxis_columns, secondary_yaxis_columns, color_column, color_base, chart_type, description):
+    if n_clicks > 0:
+        settings = {
+            'xaxis_column': xaxis_column,
+            'yaxis_columns': ','.join(yaxis_columns),
+            'secondary_yaxis_columns': ','.join(secondary_yaxis_columns),
+            'color_column': color_column,
+            'color_base': color_base,
+            'chart_type': chart_type
+        }
+        date_str = pd.Timestamp.now().strftime('%Y-%m-%d_%H-%M-%S')
+        filename = f'./saved_setups/{date_str}_{description}.xml'
+        save_settings(filename, settings)
+    return 0
+
+# Update settings when button is clicked
+@app.callback(
+    Output('update-settings-button', 'n_clicks'),
+    [Input('update-settings-button', 'n_clicks')],
+    [State('load-settings-dropdown', 'value'),
+     State('xaxis-column', 'value'),
+     State('yaxis-columns', 'value'),
+     State('secondary-yaxis-columns', 'value'),
+     State('color-column', 'value'),
+     State('color-base', 'value'),
+     State('chart-type', 'value')]
+)
+def update_current_settings(n_clicks, filename, xaxis_column, yaxis_columns, secondary_yaxis_columns, color_column, color_base, chart_type):
+    if n_clicks > 0 and filename:
+        settings = {
+            'xaxis_column': xaxis_column,
+            'yaxis_columns': ','.join(yaxis_columns),
+            'secondary_yaxis_columns': ','.join(secondary_yaxis_columns),
+            'color_column': color_column,
+            'color_base': color_base,
+            'chart_type': chart_type
+        }
+        save_settings(f'./saved_setups/{filename}', settings)
+    return 0
 
 # Define callback to update graph
 @app.callback(
