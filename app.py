@@ -9,6 +9,7 @@ import plotly.colors as pc
 import colorsys
 import os
 import xml.etree.ElementTree as ET
+import argparse
 
 # Sample data
 np.random.seed(42)  # For reproducibility
@@ -387,6 +388,13 @@ def update_graph(n_clicks, xaxis_column, yaxis_columns, secondary_yaxis_columns,
 
     return fig
 
-# Run the app
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description='Run Dash app')
+parser.add_argument('--port', type=int, default=8050, help='Port to run the server on')
+parser.add_argument('--address', type=str, default='0.0.0.0', help='Address to run the server on')
+args = parser.parse_args()
+
+
+# Run the app in production mode
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False, host=args.address, port=args.port)
