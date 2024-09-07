@@ -62,83 +62,109 @@ non_numeric_column_options.append({'label': 'None', 'value': 'None'})
 app.layout = html.Div(
     id='main-container',
     children=[
-        html.H1(children='Plotly Dash Example'),
+        html.H1(children='Custom Data Visualisation from Dataframes'),
 
-        html.Div(children='Dash: A web application framework for Python.', id='subtitle'),
+        html.H3(children='Read me first', id='subtitle'),
+        
+        html.P(children=[
+            'This tool loaded the complete data from the file.', html.Br(),
+            'Data from more files can be loaded. Choose via controller what do you want to have on the X axis, Y axis (including secondary Y axis).', html.Br(),
+            'By selecting the Column color you can differentiate between loaded tdms files. Colours of the lines (dots, bars, etc.) are set on the basis of the base color (red, green, blue, etc.) which can be shaded for better visualization in the plot.', html.Br(),
+            'You can shade these colors on the basis of the data on the Y axis or on the selected category in the dropdown menu. Last option is to choose the chart type. Four types are currently available.', html.Br(),
+            'After setting, simply hit the "Update Plot" button and the visualization will be updated for you.'
+        ], style={'whiteSpace': 'pre-line'}),
 
-        html.Label('Select X-axis Column:', id='xaxis-label'),
-        dcc.Dropdown(
-            id='xaxis-column',
-            options=column_options,
-            value='Date'  # default value
-        ),
+        
+        html.Div([
+            html.H3("Make your Plot Settigns", id='settings-title'),
+            html.Div([
+                html.Label('Select X-axis Column:', id='xaxis-label'),
+                dcc.Dropdown(
+                    id='xaxis-column',
+                    options=column_options,
+                    value='Date'  # default value
+                ),
 
-        html.Label('Select Y-axis Columns:', id='yaxis-label'),
-        dcc.Dropdown(
-            id='yaxis-columns',
-            options=numeric_column_options,
-            value=['Value1', 'Value2'],  # default values
-            multi=True
-        ),
+                html.Label('Select Y-axis Columns:', id='yaxis-label'),
+                dcc.Dropdown(
+                    id='yaxis-columns',
+                    options=numeric_column_options,
+                    value=['Value1', 'Value2'],  # default values
+                    multi=True
+                ),
 
-        html.Label('Select Secondary Y-axis Columns:', id='secondary-yaxis-label'),
-        dcc.Dropdown(
-            id='secondary-yaxis-columns',
-            options=numeric_column_options,
-            value=[],  # default values
-            multi=True
-        ),
+                html.Label('Select Secondary Y-axis Columns:', id='secondary-yaxis-label'),
+                dcc.Dropdown(
+                    id='secondary-yaxis-columns',
+                    options=numeric_column_options,
+                    value=[],  # default values
+                    multi=True
+                ),
+            ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top'}),
 
-        html.Label('Select Color Column:', id='color-label'),
-        dcc.Dropdown(
-            id='color-column',
-            options=non_numeric_column_options,
-            value='Category'  # default value
-        ),
+            html.Div([
+                html.Label('Select Color Column:', id='color-label'),
+                dcc.Dropdown(
+                    id='color-column',
+                    options=non_numeric_column_options,
+                    value='Category'  # default value
+                ),
 
-        html.Label('Color Base:', id='color-base-label'),
-        dcc.RadioItems(
-            id='color-base',
-            options=[
-                {'label': 'Y-axis Trace Line', 'value': 'yaxis'},
-                {'label': 'Category', 'value': 'category'}
-            ],
-            value='yaxis'  # default value
-        ),
+                html.Label('Color Base:', id='color-base-label'),
+                dcc.RadioItems(
+                    id='color-base',
+                    options=[
+                        {'label': 'Y-axis Trace Line', 'value': 'yaxis'},
+                        {'label': 'Category', 'value': 'category'}
+                    ],
+                    value='yaxis'  # default value
+                ),
 
-        html.Label('Select Chart Type:', id='chart-type-label'),
-        dcc.Dropdown(
-            id='chart-type',
-            options=[
-                {'label': 'Line', 'value': 'lines'},
-                {'label': 'Bar', 'value': 'bars'},
-                {'label': 'Scatter', 'value': 'markers'},
-                {'label': 'Histogram', 'value': 'histogram'}
-            ],
-            value='lines'  # default value
-        ),
-
+                html.Label('Select Chart Type:', id='chart-type-label'),
+                dcc.Dropdown(
+                    id='chart-type',
+                    options=[
+                        {'label': 'Line', 'value': 'lines'},
+                        {'label': 'Bar', 'value': 'bars'},
+                        {'label': 'Scatter', 'value': 'markers'},
+                        {'label': 'Histogram', 'value': 'histogram'}
+                    ],
+                    value='lines'  # default value
+                ),
+            ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top', 'marginLeft': '4%'}),
+        ]),
         html.Button('Update Plot', id='update-button', n_clicks=0),
-        
-
-        
-        html.Br(),  # Add a break here
-        html.Br(),  # Add a break here
-        html.Label('Load Saved Settings:', id='load-settings-label'),
-        html.Br(),  # Add a break here
-        dcc.Dropdown(
-            id='load-settings-dropdown',
-            options=[],
-            value=None
-        ),
-        html.Button('Load Settings', id='load-settings-button', n_clicks=0),
-        html.Button('Update Settings', id='update-settings-button', n_clicks=0),
-        html.Br(),  # Add a break here
-        html.Br(),  # Add a break here
-        html.Label('Enter description to a new save file:', id='description-label'),
-        html.Br(),  # Add a break here
-        dcc.Input(id='description-input', type='text', value='', placeholder='Enter description'),
-        html.Button('Save Settings', id='save-settings-button', n_clicks=0),
+        html.Br(),
+      
+        html.Div([
+            html.H3('Saving Setups', id='setup-saving-title'),
+            html.P(children=[
+            'This tool simple reads and saves the controler settings about into a xlm file.', html.Br(),
+            'This settings must be then applied by hitting "Update Plot"', html.Br(),
+            'If some settings are choosen then and changing the setting controllers higher changes can be updated to teh selected file hitting "Update Settings"', html.Br(),
+            'Entering some description on teh right hand side and then hitting "Save Settings" new settigns file will be createded. Additionally the current date and time will be recorded as file name.', html.Br()
+            ], style={'whiteSpace': 'pre-line'}),
+            html.Div([
+                html.Label('Choose Settings:', id='load-settings-label'),
+                html.Br(),  
+                dcc.Dropdown(
+                    id='load-settings-dropdown',
+                    options=[],
+                    value=None
+                ),
+                html.Button('Load Settings', id='load-settings-button', n_clicks=0),
+                html.Button('Update Settings', id='update-settings-button', n_clicks=0),
+                html.Br(),  # Add a break here
+                ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top'}),
+            
+            html.Div([
+                html.Label('Enter description as a file name:', id='description-label'),
+                html.Br(),  # Add a break here
+                dcc.Input(id='description-input', type='text', value='', placeholder='Enter description'),
+                html.Br(),
+                html.Button('Save Settings', id='save-settings-button', n_clicks=0),
+            ], style={'width': '48%', 'display': 'inline-block', 'verticalAlign': 'top', 'marginLeft': '4%'}),
+        ]),
         dcc.Graph(
             id='example-graph'
         )
@@ -348,7 +374,7 @@ def update_graph(n_clicks, xaxis_column, yaxis_columns, secondary_yaxis_columns,
 
     # Update layout
     fig.update_layout(
-        title='Sample Data Timeline', 
+        # title='Sample Data Timeline', 
         xaxis_title=xaxis_column, 
         yaxis_title='Values',
         template='plotly_white',
